@@ -2,65 +2,85 @@ const express = require('express');
 const { Server: HttpServer } = require('http');
 const { Server: IOServer } = require('socket.io');
 const exphbs = require('express-handlebars');
-const ProductManager = require('./ProductManager');
-const productManager = new ProductManager('./data/products.json');
+const mongoose = require('mongoose');
+const ProductManagerDB = require('../src/dao/Product'); // Manager para MongoDB
+const ProductManagerFS = require('../src/dao/ProductManager'); // Manager para FileSystem
+const CartManagerDB = require('../src/dao/Cart'); // Manager para MongoDB
+const CartManagerFS = require('../src/dao/CartManager'); // Manager para FileSystem
+
+// MongoDB Atlas configuration
+const atlasUsername = 'CoderUser';
+const atlasPassword = 'Linakr7crMUApDsK';
+const atlasCluster = 'codercluster.eirlcsk.mongodb.net';
+const dbName = 'CoderCluster';
+
+// Mongoose connection string
+const mongoDBAtlasUrl = `mongodb+srv://${atlasUsername}:${atlasPassword}@${atlasCluster}/${dbName}?retryWrites=true&w=majority`;
+
+mongoose.connect(mongoDBAtlasUrl, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log('MongoDB connected...'))
+  .catch(err => console.log('MongoDB connection error:', err));
+
+// Decide which manager to use based on the database connection status
+const productManager = mongoose.connection.readyState === 1 ? new ProductManagerDB() : new ProductManagerFS('./data/products.json');
+const cartManager = mongoose.connection.readyState === 1 ? new CartManagerDB() : new CartManagerFS('./data/carts.json');
 
 const app = express();
 const httpServer = new HttpServer(app);
 const io = new IOServer(httpServer);
 
-const productRoutes = require('./routes/productRoutes');
-const cartRoutes = require('./routes/cartRoutes');
-
-// Configuración de Handlebars
 app.engine('handlebars', exphbs.engine({ defaultLayout: 'main' }));
 app.set('view engine', 'handlebars');
 app.set('views', __dirname + '/views');
 
-// Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
-// Rutas para la API con prefijo '/api'
+const productRoutes = require('./routes/productRoutes');
+const cartRoutes = require('./routes/cartRoutes');
+
 app.use('/api/products', productRoutes);
 app.use('/api/carts', cartRoutes);
 
-// Ruta principal que renderiza la vista principal sin Websockets
 app.get('/', (req, res) => {
     res.render('home');
 });
 
-// Ruta para realtimeproducts que renderiza la vista en tiempo real con Websockets
-app.get('/realtimeproducts', async (req, res) => {
-    let products = await productManager.getProducts();
-    res.render('realTimeProducts', { products });
-});
-
-// Websockets
 io.on('connection', (socket) => {
     console.log('Un cliente se ha conectado');
 
-    // Manejar el evento de nuevo producto
     socket.on('newProduct', async (productData) => {
-        await productManager.addProduct(productData);
-        io.emit('productListUpdated', await productManager.getProducts());
+        try {
+            await productManager.addProduct(productData);
+            io.emit('productListUpdated', await productManager.getProducts());
+        } catch (error) {
+            console.error(error);
+            socket.emit('error', 'Error al agregar producto');
+        }
     });
 
-    // Manejar el evento de eliminación de producto
     socket.on('deleteProduct', async (productId) => {
-        await productManager.deleteProduct(productId);
-        io.emit('productListUpdated', await productManager.getProducts());
+        try {
+            await productManager.deleteProduct(productId);
+            io.emit('productListUpdated', await productManager.getProducts());
+        } catch (error) {
+            console.error(error);
+            socket.emit('error', 'Error al eliminar producto');
+        }
     });
 
-    // Manejar el evento de actualización de producto
     socket.on('updateProduct', async (productData) => {
-        await productManager.updateProduct(productData.id, productData);
-        io.emit('productListUpdated', await productManager.getProducts());
+        try {
+            await productManager.updateProduct(productData.id, productData);
+            io.emit('productListUpdated', await productManager.getProducts());
+        } catch (error) {
+            console.error(error);
+            socket.emit('error', 'Error al actualizar producto');
+        }
     });
 });
 
-// Iniciar servidor
 httpServer.listen(8080, () => {
     console.log("Servidor escuchando en el puerto 8080");
 });
