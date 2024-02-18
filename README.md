@@ -1,24 +1,26 @@
-# Proyecto E-commerce Backend con Websockets
+# Proyecto E-commerce Backend con Websockets y MongoDB
 
 ## Descripción
-Este proyecto amplía el servidor backend para un e-commerce, integrando Websockets y el motor de plantillas Handlebars para permitir actualizaciones en tiempo real y la visualización interactiva de productos.
+Este proyecto extiende el servidor backend para un e-commerce, integrando Websockets, el motor de plantillas Handlebars, y MongoDB a través de Mongoose para permitir actualizaciones en tiempo real, la visualización interactiva de productos, y la persistencia de datos tanto en archivos locales como en una base de datos MongoDB.
 
 ## Requisitos del Entregable
-- Implementación de Websockets para actualizaciones en tiempo real.
+- Integración de Websockets para actualizaciones en tiempo real.
 - Uso de Handlebars como motor de plantillas.
 - Configuración del servidor para escuchar en el puerto 8080.
 - Rutas para la gestión de productos y visualización en tiempo real.
+- Implementación de Mongoose para la interacción con MongoDB.
+- Soporte para persistencia de datos mediante FileSystem y MongoDB.
 
 ## Objetivos Alcanzados
 - Actualización en tiempo real de la lista de productos a través de Websockets.
 - Renderizado de vistas utilizando Handlebars, incluyendo una página de administración de productos y una vista en tiempo real para los usuarios.
-- Operaciones CRUD completas para la gestión de productos desde el backend.
-- Corrección de la configuración de Handlebars para asegurar el correcto renderizado de las vistas.
+- Operaciones CRUD completas para la gestión de productos y carritos de compra, con soporte para MongoDB y FileSystem.
+- Integración de Mongoose para la modelización de datos y acceso a MongoDB.
 
 ## Instalación y Ejecución
 Para instalar las dependencias del proyecto, ejecuta:  
 ```
-npm install
+npm install  
 ```
 
 Para iniciar el servidor, ejecuta:  
@@ -26,38 +28,42 @@ Para iniciar el servidor, ejecuta:
 npm start  
 ```
 
-## Estructura de Archivos  
+## Estructura de Archivos Actualizada
 Proyecto/  
 │  
 ├── src/  
+│ ├── dao/ # Acceso a datos para MongoDB y FileSystem  
+│ │ ├── Cart.js  
+│ │ ├── CartManager.js  
+│ │ ├── Product.js  
+│ │ └── ProductManager.js  
+│ ├── models/ # Modelos Mongoose  
+│ │ ├── Cart.js  
+│ │ └── Product.js  
 │ ├── public/ # Archivos estáticos  
 │ ├── routes/ # Rutas para productos y carritos  
-│ │ ├── productRoutes.js  
-│ │ └── cartRoutes.js  
+│ │ ├── cartRoutes.js  
+│ │ └── productRoutes.js  
 │ ├── views/ # Plantillas Handlebars  
+│ │ ├── chat.handlebars  
 │ │ ├── layouts/  
 │ │ ├── home.handlebars  
 │ │ └── realTimeProducts.handlebars  
-│ ├── app.js # Servidor Express y Socket.io  
-│ └── ProductManager.js # Gestión de productos  
+│ └── app.js # Servidor Express, Mongoose y Socket.io  
 │  
 ├── data/  
-│ ├── products.json # Almacenamiento de los productos  
+│ ├── carts.json # Almacenamiento de carritos (FileSystem)  
+│ └── products.json # Almacenamiento de productos (FileSystem)  
 │  
 ├── .gitignore  
 ├── package.json  
 ├── package-lock.json  
 └── README.md  
 
-
-## Uso
-- **Visualización en Tiempo Real:** Accede a `/realtimeproducts` para ver y agregar productos en tiempo real.
-- **API de Productos:** Utiliza `/api/products` para interactuar con la API de productos, permitiendo operaciones CRUD.
-
-## Correcciones Realizadas
-- Añadida la configuración necesaria en `app.js` para indicar la ubicación de las vistas de Handlebars.
-- Implementada la ruta `/realtimeproducts` para probar el correcto funcionamiento de websockets.
-- Ajustados los endpoints para reflejar correctamente las operaciones disponibles.
+## Uso  
+- **Visualización en Tiempo Real**: Accede a `/realtimeproducts` para ver y agregar productos en tiempo real.
+- **Chat en Vivo**: Accede a `/chat` para utilizar la funcionalidad de chat en tiempo real.
+- **API de Productos y Carritos**: Utiliza `/api/products` y `/api/carts` para interactuar con las APIs de productos y carritos, permitiendo operaciones CRUD.
 
 ## Contribuciones
 Para contribuir al proyecto, por favor, sigue las instrucciones de contribución.
